@@ -1,0 +1,7 @@
+{
+  "name": "Dr. Purrfect",
+  "description": "A premium veterinary prescription platform designed for Gen-Z and Millennials, offering a seamless medical history timeline for pet owners and a comprehensive dashboard for veterinarians.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
