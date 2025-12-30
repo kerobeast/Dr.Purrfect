@@ -554,7 +554,7 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 relative z-[10]">
+      <main className="max-w-7xl mx-auto px-4 py-8">
         <HeroBanner role={role} />
 
         {role === 'VET' ? (

@@ -457,9 +457,9 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
 
       {/* REGISTRATION MODAL WITH STEPS */}
       {isRegisterModalOpen && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center p-2 md:p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsRegisterModalOpen(false)} />
-          <div className="relative w-full max-w-lg bg-white rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl border border-slate-100 max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[500] flex items-start sm:items-center justify-center p-2 md:p-4 overflow-y-auto pt-6 sm:pt-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsRegisterModalOpen(false)} />
+          <div className="relative w-full max-w-lg bg-white rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 mb-8 sm:mb-0">
             <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar">
               {regStep === 'FORM' && (
                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -565,9 +565,9 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
 
       {/* ADD PET MODAL (For existing owners) */}
       {isAddPetModalOpen && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsAddPetModalOpen(false)} />
-          <div className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[500] flex items-start sm:items-center justify-center p-4 overflow-y-auto pt-6 sm:pt-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsAddPetModalOpen(false)} />
+          <div className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 mb-8 sm:mb-0">
             <div className="p-10">
               <h3 className="text-3xl font-black text-slate-900 mb-6">Register Companion</h3>
               <form onSubmit={handleSaveAnotherPet} className="space-y-6">
@@ -601,9 +601,9 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
 
       {/* UPLOAD RECORD MODAL */}
       {isUploadModalOpen && selectedPet && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsUploadModalOpen(false)} />
-          <div className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[500] flex items-start sm:items-center justify-center p-4 overflow-y-auto pt-6 sm:pt-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsUploadModalOpen(false)} />
+          <div className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200 mb-8 sm:mb-0">
             <div className="p-10">
               <div className="flex justify-between items-center mb-8">
                 <div>
@@ -657,9 +657,9 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
 
       {/* EDIT PET MODAL */}
       {isEditPetModalOpen && selectedPet && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsEditPetModalOpen(false)} />
-          <div className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[500] flex items-start sm:items-center justify-center p-4 overflow-y-auto pt-6 sm:pt-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsEditPetModalOpen(false)} />
+          <div className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200 mb-8 sm:mb-0">
             <div className="p-10">
               <h3 className="text-3xl font-black text-slate-900 mb-6 tracking-tight">Update Details</h3>
               <form onSubmit={handleUpdatePetDetails} className="space-y-6">
