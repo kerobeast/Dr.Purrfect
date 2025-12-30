@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, Plus, User, Stethoscope, LogOut, Bell, PawPrint, Info, Sparkles, Heart, Mail, ShieldPlus, Lock, ArrowRight, ShieldCheck, KeyRound, Settings, UserCircle, ChevronDown, CheckCircle2, Clock, FileText, X, ArrowLeft } from 'lucide-react';
+import { Search, Plus, User, Stethoscope, LogOut, Bell, PawPrint, Info, Sparkles, Heart, Mail, ShieldPlus, Lock, ArrowRight, ShieldCheck, KeyRound, Settings, UserCircle, ChevronDown, CheckCircle2, Clock, FileText, X, ArrowLeft, UserRound, Phone, AtSign, Shield } from 'lucide-react';
 import { MOCK_OWNERS, MOCK_PETS, MOCK_VISITS } from './mockData';
 import { ViewRole, FullVisitRecord, Owner, Pet, Visit, PetType, Gender } from './types';
 import AdminDashboard from './components/AdminDashboard';
@@ -135,13 +135,82 @@ const VetLogin: React.FC<{ onAuthenticate: () => void; onBack: () => void }> = (
   );
 };
 
+const ProfileModal: React.FC<{ isOpen: boolean; onClose: () => void; role: ViewRole; owner: Owner | null; pets: Pet[] }> = ({ isOpen, onClose, role, owner, pets }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose} />
+      <div className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200">
+        <div className="p-10">
+          <div className="flex justify-between items-start mb-8">
+            <div className="w-20 h-20 rounded-3xl bg-emerald-500 text-white flex items-center justify-center text-3xl font-black shadow-xl shadow-emerald-200">
+              {role === 'VET' ? 'JD' : (owner ? owner.name.split(' ').map(n => n[0]).join('') : '?')}
+            </div>
+            <button onClick={onClose} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full transition-colors"><X size={24} /></button>
+          </div>
+
+          <div className="mb-8">
+            <h3 className="text-2xl font-black text-slate-900">{role === 'VET' ? 'Dr. Jane Doe' : (owner?.name || 'Guest User')}</h3>
+            <p className="text-[11px] font-black text-emerald-600 uppercase tracking-widest mt-1">{role === 'VET' ? 'Chief Medical Officer' : 'Premium Pet Guardian'}</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <Mail className="text-slate-400" size={18} />
+              <div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Email Address</p>
+                <p className="text-xs font-bold text-slate-700">{role === 'VET' ? 'jane.doe@drpurrfect.vet' : (owner?.email || 'N/A')}</p>
+              </div>
+            </div>
+            {owner?.phone_number && (
+              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <Phone className="text-slate-400" size={18} />
+                <div>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Emergency Contact</p>
+                  <p className="text-xs font-bold text-slate-700">{owner.phone_number}</p>
+                </div>
+              </div>
+            )}
+            {role === 'OWNER' && owner && (
+              <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Registered Companions</p>
+                  <span className="text-[10px] font-black text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-100">{pets.filter(p => p.owner_id === owner.id).length}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {pets.filter(p => p.owner_id === owner.id).map(pet => (
+                    <div key={pet.id} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-xl border border-emerald-100">
+                      <PawPrint size={10} className="text-emerald-500" />
+                      <span className="text-[10px] font-black text-slate-700">{pet.pet_name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-10 pt-6 border-t border-slate-100 flex gap-4">
+            <button className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Settings</button>
+            <button onClick={onClose} className="flex-1 py-3.5 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-xl shadow-slate-200">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const [role, setRole] = useState<ViewRole>('OWNER');
   const [isVetAuthenticated, setIsVetAuthenticated] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
+  const [activeOwner, setActiveOwner] = useState<Owner | null>(null);
+  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -229,11 +298,13 @@ const App: React.FC = () => {
 
   const handleAddOwner = (newOwner: Owner) => {
     setOwners(prev => [...prev, newOwner]);
+    setActiveOwner(newOwner);
     showToast(`Household created for ${newOwner.name}. Welcome!`, 'success');
   };
 
   const handleAddPet = (newPet: Pet) => {
     setPets(prev => [...prev, newPet]);
+    setSelectedPet(newPet);
     showToast(`Registered ${newPet.pet_name} to your household.`, 'success');
   };
 
@@ -281,6 +352,29 @@ const App: React.FC = () => {
     showToast("Session locked.", 'info');
   };
 
+  const handleLogoutOwner = () => {
+    setActiveOwner(null);
+    setSelectedPet(null);
+    setIsProfileOpen(false);
+    showToast("Signed out successfully.", 'info');
+  };
+
+  const getInitials = () => {
+    if (role === 'VET') return 'JD';
+    if (activeOwner) {
+      return activeOwner.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    }
+    return '?';
+  };
+
+  const getCurrentName = () => {
+    if (role === 'VET') return 'Dr. Jane Doe';
+    if (activeOwner) return activeOwner.name;
+    return 'Guest User';
+  };
+
+  const isUserLoggedIn = role === 'VET' ? isVetAuthenticated : !!activeOwner;
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-emerald-100 selection:text-emerald-900 relative">
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm">
@@ -317,7 +411,7 @@ const App: React.FC = () => {
               className={`p-2 md:p-2.5 rounded-xl transition-all relative ${isNotificationsOpen ? 'bg-emerald-50 text-emerald-600' : 'text-slate-400 hover:bg-slate-50'}`}
             >
               <Bell size={18} className="md:w-5 md:h-5" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 md:w-2 md:h-2 bg-rose-500 rounded-full border-2 border-white animate-pulse" />
+              {isUserLoggedIn && <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 md:w-2 md:h-2 bg-rose-500 rounded-full border-2 border-white animate-pulse" />}
             </button>
 
             {isNotificationsOpen && (
@@ -326,17 +420,21 @@ const App: React.FC = () => {
                   <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Clinical Feed</h4>
                   <span className="text-[8px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">3 New</span>
                 </div>
-                <div className="space-y-3">
-                  <div className="flex gap-3 p-3 bg-slate-50 rounded-2xl group cursor-pointer hover:bg-emerald-50 transition-colors">
-                    <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                      <Clock size={16} />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-900">Mochi's vaccine booster due</p>
-                      <p className="text-[9px] text-slate-400 font-medium">Scheduled for tomorrow, 10:00 AM</p>
+                {isUserLoggedIn ? (
+                   <div className="space-y-3">
+                    <div className="flex gap-3 p-3 bg-slate-50 rounded-2xl group cursor-pointer hover:bg-emerald-50 transition-colors">
+                      <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                        <Clock size={16} />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-bold text-slate-900">Mochi's vaccine booster due</p>
+                        <p className="text-[9px] text-slate-400 font-medium">Scheduled for tomorrow, 10:00 AM</p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <p className="text-xs text-slate-400 text-center py-4 italic">Sign in to view your activity feed</p>
+                )}
                 <button className="w-full py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors">
                   View All Activity
                 </button>
@@ -347,19 +445,22 @@ const App: React.FC = () => {
           <div className="relative" ref={profileRef}>
             <button 
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className={`flex items-center gap-2 w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-200 border border-emerald-300 items-center justify-center text-emerald-800 font-bold shadow-sm transition-all hover:scale-105 active:scale-95 ${isProfileOpen ? 'ring-2 ring-emerald-500 ring-offset-2' : ''}`}
+              className={`flex items-center gap-2 w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-gradient-to-br ${isUserLoggedIn ? 'from-emerald-100 to-emerald-200 border-emerald-300 text-emerald-800' : 'from-slate-100 to-slate-200 border-slate-300 text-slate-400'} border items-center justify-center font-bold shadow-sm transition-all hover:scale-105 active:scale-95 ${isProfileOpen ? 'ring-2 ring-emerald-500 ring-offset-2' : ''}`}
             >
-              {role === 'VET' ? 'JD' : 'AR'}
+              {getInitials()}
             </button>
 
             {isProfileOpen && (
               <div className="absolute right-0 mt-4 w-60 md:w-64 bg-white border border-slate-200 shadow-2xl rounded-3xl overflow-hidden animate-in slide-in-from-top-2 duration-200 z-[60]">
                 <div className="p-5 border-b border-slate-100 bg-slate-50/50">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Signed in as</p>
-                  <p className="text-sm font-black text-slate-900">{role === 'VET' ? 'Dr. Jane Doe' : 'Alex Rivera'}</p>
+                  <p className="text-sm font-black text-slate-900">{getCurrentName()}</p>
                 </div>
                 <div className="p-2">
-                  <button className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition-colors text-left">
+                  <button 
+                    onClick={() => { setIsProfileModalOpen(true); setIsProfileOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition-colors text-left"
+                  >
                     <UserCircle size={16} className="text-slate-400" /> My Profile
                   </button>
                   <button 
@@ -368,12 +469,12 @@ const App: React.FC = () => {
                   >
                     <ArrowRight size={16} /> Switch to {role === 'VET' ? 'Owner' : 'Vet'}
                   </button>
-                  {role === 'VET' && isVetAuthenticated && (
+                  {isUserLoggedIn && (
                     <button 
-                      onClick={handleLogoutVet}
+                      onClick={role === 'VET' ? handleLogoutVet : handleLogoutOwner}
                       className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[11px] font-bold text-rose-600 hover:bg-rose-50 transition-colors text-left"
                     >
-                      <LogOut size={16} /> Lock Portal
+                      <LogOut size={16} /> {role === 'VET' ? 'Lock Portal' : 'Sign Out'}
                     </button>
                   )}
                 </div>
@@ -408,9 +509,23 @@ const App: React.FC = () => {
             onAddPet={handleAddPet}
             onUpdatePet={handleUpdatePet}
             onAddOwner={handleAddOwner}
+            activeOwner={activeOwner}
+            setActiveOwner={setActiveOwner}
+            selectedPet={selectedPet}
+            setSelectedPet={setSelectedPet}
           />
         )}
       </main>
+
+      {isProfileModalOpen && (
+        <ProfileModal 
+          isOpen={isProfileModalOpen} 
+          onClose={() => setIsProfileModalOpen(false)} 
+          role={role} 
+          owner={activeOwner}
+          pets={pets}
+        />
+      )}
 
       {toast && (
         <Toast message={toast.message} type={toast.type} />
@@ -426,9 +541,7 @@ const App: React.FC = () => {
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">&copy; 2025 Digital Care</p>
         </div>
         <div className="flex gap-6">
-          <button onClick={handleSwitchToVet} className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors">Clinician Access</button>
-          <button className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors">Privacy Policy</button>
-          <button className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors">Support</button>
+          <a href="mailto:doctorpurrfect@gmail.com" className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors">doctorpurrfect@gmail.com</a>
         </div>
       </footer>
     </div>

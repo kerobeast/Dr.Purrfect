@@ -12,6 +12,10 @@ interface Props {
   onAddPet: (pet: Pet) => void;
   onUpdatePet: (pet: Pet) => void;
   onAddOwner: (owner: Owner) => void;
+  activeOwner: Owner | null;
+  setActiveOwner: (owner: Owner | null) => void;
+  selectedPet: Pet | null;
+  setSelectedPet: (pet: Pet | null) => void;
 }
 
 const formatDisplayDate = (dateString: string) => {
@@ -107,12 +111,10 @@ const CompactVisitCard: React.FC<{ visit: Visit; pet: Pet; onEnlarge: (url: stri
   );
 };
 
-const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, onAddPet, onUpdatePet, onAddOwner }) => {
+const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, onAddPet, onUpdatePet, onAddOwner, activeOwner, setActiveOwner, selectedPet, setSelectedPet }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [petSearchId, setPetSearchId] = useState('');
   const [petSearchName, setPetSearchName] = useState('');
-  const [activeOwner, setActiveOwner] = useState<Owner | null>(null);
-  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
   const [canScrollRightDetails, setCanScrollRightDetails] = useState(false);
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
@@ -210,7 +212,6 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
       phone_number: '' 
     };
     onAddOwner(owner);
-    setActiveOwner(owner);
 
     // 2. Create Pet
     const petId = `p${Date.now()}`;
@@ -228,7 +229,6 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
       birth_date: new Date().toISOString().split('T')[0]
     };
     onAddPet(pet);
-    setSelectedPet(pet);
     setLastRegisteredPet(pet);
     
     // 3. Move to Success Screen
@@ -242,7 +242,6 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
     const displayId = (pets.length + 1001).toString();
     const pet: Pet = { ...newPetData, id: petId, display_id: displayId, owner_id: activeOwner.id } as Pet;
     onAddPet(pet);
-    setSelectedPet(pet);
     setIsAddPetModalOpen(false);
     setNewPetData({ pet_name: '', pet_type: PetType.DOG, gender: Gender.FEMALE, breed: '', age: '', color: '', birth_date: new Date().toISOString().split('T')[0], profile_photo_url: '' });
   };
