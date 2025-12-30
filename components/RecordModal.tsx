@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Upload, Check, Camera, ArrowRight, ArrowLeft, Image as ImageIcon, ZoomIn, Utensils, Droplet, Activity, ShieldCheck, FlaskConical, UserRound, Thermometer, AlertCircle, CalendarClock, Phone, Globe } from 'lucide-react';
 import { FullVisitRecord, PetType, Gender } from '../types';
 import ImageLightbox from './ImageLightbox';
@@ -14,6 +14,11 @@ interface Props {
 const RecordModal: React.FC<Props> = ({ isOpen, initialData, onClose, onSave }) => {
   const [step, setStep] = useState(1);
   const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
+  
+  // Refs for File Access
+  const portraitInputRef = useRef<HTMLInputElement>(null);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState<Partial<FullVisitRecord>>({
     date: new Date().toISOString().split('T')[0],
     pet_type: PetType.DOG,
@@ -42,13 +47,17 @@ const RecordModal: React.FC<Props> = ({ isOpen, initialData, onClose, onSave }) 
     weight: 0,
     temperature: 0,
     heart_rate: 0,
-    image_url: undefined,
-    display_id: 'NEW'
+    image_urls: [],
+    display_id: 'NEW',
+    profile_photo_url: ''
   });
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData({
+        ...initialData,
+        image_urls: initialData.image_urls || []
+      });
     } else {
       setFormData({
         date: new Date().toISOString().split('T')[0],
@@ -78,8 +87,9 @@ const RecordModal: React.FC<Props> = ({ isOpen, initialData, onClose, onSave }) 
         weight: 0,
         temperature: 0,
         heart_rate: 0,
-        image_url: undefined,
-        display_id: 'NEW'
+        image_urls: [],
+        display_id: 'NEW',
+        profile_photo_url: ''
       });
     }
     setStep(1);
@@ -96,9 +106,35 @@ const RecordModal: React.FC<Props> = ({ isOpen, initialData, onClose, onSave }) 
     setStep(1);
   };
 
-  const simulateUpload = () => {
-    const randomImg = `https://picsum.photos/seed/${Math.random()}/800/600`;
-    setFormData(prev => ({ ...prev, image_url: randomImg }));
+  const handleFileRead = (file: File, callback: (base64: string) => void) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      callback(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const onPortraitChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileRead(e.target.files[0], (base64) => {
+        setFormData({ ...formData, profile_photo_url: base64 });
+      });
+    }
+  };
+
+  const onMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const currentUrls = formData.image_urls || [];
+      if (currentUrls.length >= 5) return;
+      handleFileRead(e.target.files[0], (base64) => {
+        setFormData({ ...formData, image_urls: [...currentUrls, base64] });
+      });
+    }
+  };
+
+  const handleRemovePhoto = (idx: number) => {
+    const currentUrls = formData.image_urls || [];
+    setFormData({ ...formData, image_urls: currentUrls.filter((_, i) => i !== idx) });
   };
 
   const isEditMode = !!initialData?.id;
@@ -118,6 +154,31 @@ const RecordModal: React.FC<Props> = ({ isOpen, initialData, onClose, onSave }) 
                 PATIENT ID: {formData.display_id === 'NEW' ? 'ASSIGNING...' : formData.display_id}
               </div>
             </div>
+
+            <div className="flex flex-col items-center gap-3 mb-6">
+              <div className="relative group">
+                <input type="file" ref={portraitInputRef} className="hidden" accept="image/*" onChange={onPortraitChange} />
+                <div 
+                  className="w-20 h-20 rounded-2xl bg-slate-100 border-2 border-slate-200 flex items-center justify-center overflow-hidden cursor-pointer hover:border-emerald-400 transition-colors"
+                  onClick={() => portraitInputRef.current?.click()}
+                >
+                  {formData.profile_photo_url ? (
+                    <img src={formData.profile_photo_url} className="w-full h-full object-cover" alt="Portrait" />
+                  ) : (
+                    <Camera size={28} className="text-slate-300" />
+                  )}
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => portraitInputRef.current?.click()}
+                  className="absolute -bottom-1 -right-1 p-1.5 bg-emerald-500 text-white rounded-lg shadow-lg border border-white hover:bg-emerald-600 transition-colors"
+                >
+                  <Upload size={10} />
+                </button>
+              </div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Patient Portrait</p>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <label className={labelStyle}>Owner Name</label>
@@ -271,31 +332,47 @@ const RecordModal: React.FC<Props> = ({ isOpen, initialData, onClose, onSave }) 
              </div>
 
               <div className="space-y-2">
-                <label className={labelStyle}>Clinical Attachment (X-rays, Scans, Photos)</label>
-                {formData.image_url ? (
-                  <div className="relative group rounded-2xl overflow-hidden border-2 border-slate-200 shadow-sm cursor-zoom-in" onClick={() => setEnlargedImage(formData.image_url!)}>
-                    <img src={formData.image_url} alt="Attached medical media" className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100">
-                      <ZoomIn className="text-white drop-shadow-lg" size={32} />
-                    </div>
+                <input type="file" ref={mediaInputRef} className="hidden" accept="image/*" onChange={onMediaChange} />
+                <div className="flex items-center justify-between mb-1.5 px-1">
+                  <label className={labelStyle}>Clinical Media ({formData.image_urls?.length || 0}/5)</label>
+                  {(formData.image_urls?.length || 0) < 5 && (
                     <button 
                       type="button" 
-                      onClick={(e) => { e.stopPropagation(); setFormData(prev => ({...prev, image_url: undefined})); }}
-                      className="absolute top-3 right-3 bg-rose-500 text-white p-2 rounded-full shadow-lg z-20 hover:bg-rose-600 active:scale-90 transition-all"
+                      onClick={() => mediaInputRef.current?.click()}
+                      className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg hover:bg-emerald-100 transition-colors uppercase tracking-widest"
                     >
-                      <X size={16} />
+                      Attach from Gallery
                     </button>
-                  </div>
-                ) : (
-                  <button 
-                    type="button" 
-                    onClick={simulateUpload}
-                    className="w-full border-2 border-dashed border-slate-300 rounded-2xl p-8 flex flex-col items-center justify-center text-slate-500 hover:text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50/30 transition-all cursor-pointer group"
-                  >
-                    <ImageIcon size={32} className="mb-2 group-hover:scale-110 transition-transform" />
-                    <p className="text-xs font-black uppercase tracking-widest text-slate-400">Attach Clinical Photos</p>
-                  </button>
-                )}
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2">
+                  {formData.image_urls?.map((url, idx) => (
+                    <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border-2 border-slate-200 shadow-sm cursor-zoom-in" onClick={() => setEnlargedImage(url)}>
+                      <img src={url} alt={`Visit documentation ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-slate-900/10 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                        <ZoomIn size={24} className="text-white drop-shadow-lg" />
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={(e) => { e.stopPropagation(); handleRemovePhoto(idx); }}
+                        className="absolute top-2 right-2 bg-rose-500 text-white p-1.5 rounded-full shadow-lg z-20 hover:bg-rose-600 active:scale-90 transition-all"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  {(formData.image_urls?.length || 0) < 5 && (
+                    <button 
+                      type="button" 
+                      onClick={() => mediaInputRef.current?.click()}
+                      className="aspect-square border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center text-slate-400 hover:text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50/30 transition-all group"
+                    >
+                      <ImageIcon size={28} className="mb-1 group-hover:scale-110 transition-transform" />
+                      <p className="text-[9px] font-black uppercase tracking-tighter">Gallery</p>
+                    </button>
+                  )}
+                </div>
               </div>
              
               <div className="flex gap-4 mt-6">

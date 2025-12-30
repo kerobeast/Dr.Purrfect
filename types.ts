@@ -35,6 +35,7 @@ export interface Pet {
   age: string;
   color: string;
   birth_date: string;
+  profile_photo_url?: string;
 }
 
 export interface Visit {
@@ -53,6 +54,7 @@ export interface Visit {
   owner_phone_confirmation?: string;
   owner_phone_country_code?: string;
   vaccinations?: string;
+  is_external?: boolean; // Flag for owner-uploaded records
   // Diet Tracking
   diet_breakfast?: string;
   diet_lunch?: string;
@@ -65,7 +67,7 @@ export interface Visit {
   // Elimination Tracking (Urine)
   urine_color?: string;
   urine_frequency?: string;
-  image_url?: string;
+  image_urls?: string[]; // Multiple photos support
 }
 
 export type ViewRole = 'VET' | 'OWNER';
@@ -80,4 +82,5 @@ export interface FullVisitRecord extends Visit {
   age: string;
   color: string;
   birth_date: string;
+  profile_photo_url?: string;
 }

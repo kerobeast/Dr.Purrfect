@@ -7,9 +7,45 @@ export const MOCK_OWNERS: Owner[] = [
 ];
 
 export const MOCK_PETS: Pet[] = [
-  { id: 'p1', display_id: '1001', owner_id: 'o1', pet_name: 'Luna', pet_type: PetType.CAT, gender: Gender.FEMALE, breed: 'Siamese', age: '3 Years', color: 'Cream & Dark Brown', birth_date: '2021-05-15' },
-  { id: 'p2', display_id: '1002', owner_id: 'o2', pet_name: 'Mochi', pet_type: PetType.DOG, gender: Gender.MALE, breed: 'French Bulldog', age: '18 Months', color: 'Fawn', birth_date: '2022-11-20' },
-  { id: 'p3', display_id: '1003', owner_id: 'o2', pet_name: 'Coco', pet_type: PetType.BIRD, gender: Gender.FEMALE, breed: 'Parakeet', age: '4 Years', color: 'Blue & White', birth_date: '2020-01-10' },
+  { 
+    id: 'p1', 
+    display_id: '1001', 
+    owner_id: 'o1', 
+    pet_name: 'Luna', 
+    pet_type: PetType.CAT, 
+    gender: Gender.FEMALE, 
+    breed: 'Siamese', 
+    age: '3 Years', 
+    color: 'Cream & Dark Brown', 
+    birth_date: '2021-05-15',
+    profile_photo_url: 'https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&q=80&w=400'
+  },
+  { 
+    id: 'p2', 
+    display_id: '1002', 
+    owner_id: 'o2', 
+    pet_name: 'Mochi', 
+    pet_type: PetType.DOG, 
+    gender: Gender.MALE, 
+    breed: 'French Bulldog', 
+    age: '18 Months', 
+    color: 'Fawn', 
+    birth_date: '2022-11-20',
+    profile_photo_url: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=400'
+  },
+  { 
+    id: 'p3', 
+    display_id: '1003', 
+    owner_id: 'o2', 
+    pet_name: 'Coco', 
+    pet_type: PetType.BIRD, 
+    gender: Gender.FEMALE, 
+    breed: 'Parakeet', 
+    age: '4 Years', 
+    color: 'Blue & White', 
+    birth_date: '2020-01-10',
+    profile_photo_url: 'https://images.unsplash.com/photo-1552728089-57bdde30fc3e?auto=format&fit=crop&q=80&w=400'
+  },
 ];
 
 export const MOCK_VISITS: Visit[] = [
@@ -35,7 +71,7 @@ export const MOCK_VISITS: Visit[] = [
     stool_frequency: 'Once daily',
     urine_color: 'Pale Yellow',
     urine_frequency: '4x daily',
-    image_url: 'https://picsum.photos/seed/luna1/800/600'
+    image_urls: ['https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=800']
   },
   {
     id: 'v2',
@@ -59,6 +95,6 @@ export const MOCK_VISITS: Visit[] = [
     stool_frequency: 'Twice daily',
     urine_color: 'Clear-ish Yellow',
     urine_frequency: '6x daily',
-    image_url: 'https://picsum.photos/seed/luna2/800/600'
+    image_urls: ['https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&q=80&w=800', 'https://images.unsplash.com/photo-1517331156700-3c241d2b4d83?auto=format&fit=crop&q=80&w=800']
   }
 ];
