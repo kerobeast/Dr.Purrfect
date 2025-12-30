@@ -11,7 +11,7 @@ const ImageLightbox: React.FC<Props> = ({ imageUrl, onClose }) => {
   if (!imageUrl) return null;
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 md:p-12 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 md:p-12 animate-in fade-in duration-300">
       <div 
         className="absolute inset-0 bg-slate-900/95 backdrop-blur-md" 
         onClick={onClose} 

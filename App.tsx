@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, Plus, User, Stethoscope, LogOut, Bell, PawPrint, Info, Sparkles, Heart, Mail, ShieldPlus, Lock, ArrowRight, ShieldCheck, KeyRound, Settings, UserCircle, ChevronDown, CheckCircle2, Clock, FileText, X, ArrowLeft, UserRound, Phone, AtSign, Shield } from 'lucide-react';
+import { Search, Plus, User, Stethoscope, LogOut, Bell, PawPrint, Info, Sparkles, Heart, Mail, ShieldPlus, Lock, ArrowRight, ShieldCheck, KeyRound, Settings, UserCircle, ChevronDown, CheckCircle2, Clock, FileText, X, ArrowLeft, UserRound, Phone, AtSign, Shield, History, CalendarDays } from 'lucide-react';
 import { MOCK_OWNERS, MOCK_PETS, MOCK_VISITS } from './mockData';
 import { ViewRole, FullVisitRecord, Owner, Pet, Visit, PetType, Gender } from './types';
 import AdminDashboard from './components/AdminDashboard';
@@ -64,6 +64,67 @@ const HeroBanner: React.FC<{ role: ViewRole }> = ({ role }) => (
     </div>
   </div>
 );
+
+const ActivityModal: React.FC<{ isOpen: boolean; onClose: () => void; isUserLoggedIn: boolean }> = ({ isOpen, onClose, isUserLoggedIn }) => {
+  if (!isOpen) return null;
+
+  const activities = [
+    { id: 1, title: "Vaccination Reminder", desc: "Mochi's DHPP booster is due tomorrow.", time: "2 hours ago", type: "alert" },
+    { id: 2, title: "Prescription Sync", desc: "Luna's clinical notes were updated by Dr. Thorne.", time: "5 hours ago", type: "info" },
+    { id: 3, title: "Vault Access", desc: "New record added to the digital health vault.", time: "1 day ago", type: "success" },
+    { id: 4, title: "Profile Update", desc: "Alex Rivera updated the household profile.", time: "2 days ago", type: "info" }
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-md" onClick={onClose} />
+      <div className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200">
+        <div className="p-8">
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                <History size={24} />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-900">Clinical Activity Log</h3>
+                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-0.5">Real-time Practice Feed</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full transition-colors"><X size={20} /></button>
+          </div>
+
+          {!isUserLoggedIn ? (
+            <div className="py-20 text-center">
+              <Lock size={48} className="mx-auto text-slate-200 mb-4" />
+              <p className="text-slate-400 font-bold">Please sign in to view your activity log.</p>
+            </div>
+          ) : (
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+              {activities.map((act) => (
+                <div key={act.id} className="flex gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-emerald-200 transition-colors group">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${act.type === 'alert' ? 'bg-rose-50 text-rose-500' : act.type === 'success' ? 'bg-emerald-50 text-emerald-500' : 'bg-blue-50 text-blue-500'}`}>
+                    {act.type === 'alert' ? <Clock size={18} /> : act.type === 'success' ? <CheckCircle2 size={18} /> : <Info size={18} />}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <h4 className="text-[13px] font-black text-slate-900">{act.title}</h4>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase">{act.time}</span>
+                    </div>
+                    <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">{act.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-8 pt-6 border-t border-slate-100">
+            <button onClick={onClose} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-600 transition-all">Dismiss History</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const VetLogin: React.FC<{ onAuthenticate: () => void; onBack: () => void }> = ({ onAuthenticate, onBack }) => {
   const [password, setPassword] = useState('');
@@ -150,7 +211,7 @@ const ProfileModal: React.FC<{ isOpen: boolean; onClose: () => void; role: ViewR
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose} />
       <div className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200">
         <div className="p-10">
@@ -213,6 +274,7 @@ const App: React.FC = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
   
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -379,7 +441,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-emerald-100 selection:text-emerald-900 relative">
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm">
+      <nav className="sticky top-0 z-[300] bg-white/80 backdrop-blur-xl border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2">
           <button onClick={handleSwitchToOwner} className="bg-emerald-500 p-2 md:p-2.5 rounded-2xl text-white shadow-lg shadow-emerald-200 hover:scale-105 active:scale-95 transition-all">
             <Stethoscope size={20} className="md:w-6 md:h-6" />
@@ -417,7 +479,7 @@ const App: React.FC = () => {
             </button>
 
             {isNotificationsOpen && (
-              <div className="absolute right-0 mt-4 w-72 md:w-80 bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 space-y-4 animate-in slide-in-from-top-2 duration-200 z-[60]">
+              <div className="absolute right-0 mt-4 w-72 md:w-80 bg-white border border-slate-200 shadow-2xl rounded-3xl p-6 space-y-4 animate-in slide-in-from-top-2 duration-200 z-[310] overflow-hidden">
                 <div className="flex items-center justify-between">
                   <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Clinical Feed</h4>
                   <span className="text-[8px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">3 New</span>
@@ -437,7 +499,13 @@ const App: React.FC = () => {
                 ) : (
                   <p className="text-xs text-slate-400 text-center py-4 italic">Sign in to view your activity feed</p>
                 )}
-                <button className="w-full py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors">
+                <button 
+                  onClick={() => {
+                    setIsNotificationsOpen(false);
+                    setIsActivityModalOpen(true);
+                  }}
+                  className="w-full py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors border-t border-slate-50 mt-2"
+                >
                   View All Activity
                 </button>
               </div>
@@ -453,7 +521,7 @@ const App: React.FC = () => {
             </button>
 
             {isProfileOpen && (
-              <div className="absolute right-0 mt-4 w-60 md:w-64 bg-white border border-slate-200 shadow-2xl rounded-3xl overflow-hidden animate-in slide-in-from-top-2 duration-200 z-[60]">
+              <div className="absolute right-0 mt-4 w-60 md:w-64 bg-white border border-slate-200 shadow-2xl rounded-3xl overflow-hidden animate-in slide-in-from-top-2 duration-200 z-[310]">
                 <div className="p-5 border-b border-slate-100 bg-slate-50/50">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Signed in as</p>
                   <p className="text-sm font-black text-slate-900">{getCurrentName()}</p>
@@ -486,7 +554,7 @@ const App: React.FC = () => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-8 relative z-[10]">
         <HeroBanner role={role} />
 
         {role === 'VET' ? (
@@ -530,6 +598,14 @@ const App: React.FC = () => {
         />
       )}
 
+      {isActivityModalOpen && (
+        <ActivityModal 
+          isOpen={isActivityModalOpen} 
+          onClose={() => setIsActivityModalOpen(false)} 
+          isUserLoggedIn={isUserLoggedIn}
+        />
+      )}
+
       {toast && (
         <Toast message={toast.message} type={toast.type} />
       )}
@@ -547,6 +623,22 @@ const App: React.FC = () => {
           <a href="mailto:doctorpurrfect@gmail.com" className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-emerald-600 transition-colors">doctorpurrfect@gmail.com</a>
         </div>
       </footer>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e2e8f0;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #cbd5e1;
+        }
+      `}</style>
     </div>
   );
 };

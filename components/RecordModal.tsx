@@ -449,7 +449,7 @@ const RecordModal: React.FC<Props> = ({ isOpen, initialData, onClose, onSave }) 
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
       <ImageLightbox imageUrl={enlargedImage} onClose={() => setEnlargedImage(null)} />
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100">

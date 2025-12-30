@@ -457,94 +457,94 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
 
       {/* REGISTRATION MODAL WITH STEPS */}
       {isRegisterModalOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[500] flex items-center justify-center p-2 md:p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsRegisterModalOpen(false)} />
-          <div className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100">
-            <div className="p-10">
+          <div className="relative w-full max-w-lg bg-white rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl border border-slate-100 max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar">
               {regStep === 'FORM' && (
                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="flex justify-between items-center mb-8">
+                  <div className="flex justify-between items-start mb-6 md:mb-8 sticky top-0 bg-white z-10 pb-2">
                     <div>
-                      <h3 className="text-3xl font-black text-slate-900 tracking-tight">Register your Pet</h3>
-                      <p className="text-[11px] font-black text-emerald-600 uppercase tracking-widest mt-1">Start your pet's medical profile</p>
+                      <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Register your Pet</h3>
+                      <p className="text-[10px] md:text-[11px] font-black text-emerald-600 uppercase tracking-widest mt-1">Start your pet's medical profile</p>
                     </div>
-                    <button onClick={() => setIsRegisterModalOpen(false)} className="p-2 text-slate-400"><X size={28} /></button>
+                    <button onClick={() => setIsRegisterModalOpen(false)} className="p-2 text-slate-400 hover:text-rose-500 transition-colors"><X size={24} className="md:w-7 md:h-7" /></button>
                   </div>
-                  <form onSubmit={handleFinalRegistration} className="space-y-6">
+                  <form onSubmit={handleFinalRegistration} className="space-y-4 md:space-y-6">
                     <div className="space-y-4">
                       <div className="group">
-                        <label className="block text-[10px] font-black text-slate-500 uppercase mb-2 ml-1">Guardian Name</label>
-                        <input type="text" required placeholder="Full name" className="w-full p-4 bg-slate-50 border rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.ownerName} onChange={e => setRegFormData({...regFormData, ownerName: e.target.value})} />
+                        <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Guardian Name</label>
+                        <input type="text" required placeholder="Full name" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.ownerName} onChange={e => setRegFormData({...regFormData, ownerName: e.target.value})} />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-3 md:gap-4">
                         <div className="group">
-                          <label className="block text-[10px] font-black text-slate-500 uppercase mb-2 ml-1">Pet Name</label>
-                          <input type="text" required placeholder="e.g. Luna" className="w-full p-4 bg-slate-50 border rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.petName} onChange={e => setRegFormData({...regFormData, petName: e.target.value})} />
+                          <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Pet Name</label>
+                          <input type="text" required placeholder="e.g. Luna" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.petName} onChange={e => setRegFormData({...regFormData, petName: e.target.value})} />
                         </div>
                         <div className="group">
-                          <label className="block text-[10px] font-black text-slate-500 uppercase mb-2 ml-1">Pet Age</label>
-                          <input type="text" required placeholder="e.g. 2 Years" className="w-full p-4 bg-slate-50 border rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.petAge} onChange={e => setRegFormData({...regFormData, petAge: e.target.value})} />
+                          <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Pet Age</label>
+                          <input type="text" required placeholder="e.g. 2 Years" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.petAge} onChange={e => setRegFormData({...regFormData, petAge: e.target.value})} />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-3 md:gap-4">
                         <div className="group">
-                          <label className="block text-[10px] font-black text-slate-500 uppercase mb-2 ml-1">Pet Type</label>
-                          <select required className="w-full p-4 bg-slate-50 border rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all appearance-none" value={regFormData.petType} onChange={e => setRegFormData({...regFormData, petType: e.target.value as PetType})}>
+                          <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Pet Type</label>
+                          <select required className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all appearance-none" value={regFormData.petType} onChange={e => setRegFormData({...regFormData, petType: e.target.value as PetType})}>
                             {Object.values(PetType).map(t => <option key={t} value={t}>{t}</option>)}
                           </select>
                         </div>
                         <div className="group">
-                          <label className="block text-[10px] font-black text-slate-500 uppercase mb-2 ml-1">Gender</label>
-                          <select required className="w-full p-4 bg-slate-50 border rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all appearance-none" value={regFormData.petGender} onChange={e => setRegFormData({...regFormData, petGender: e.target.value as Gender})}>
+                          <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Gender</label>
+                          <select required className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all appearance-none" value={regFormData.petGender} onChange={e => setRegFormData({...regFormData, petGender: e.target.value as Gender})}>
                             {Object.values(Gender).map(g => <option key={g} value={g}>{g}</option>)}
                           </select>
                         </div>
                       </div>
                     </div>
-                    <button type="submit" className="w-full py-5 bg-[#56A483] text-white rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-[#4a8d70] transition-all">Complete Registration <ArrowRight size={20} /></button>
+                    <button type="submit" className="w-full py-4 md:py-5 bg-[#56A483] text-white rounded-xl md:rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 md:gap-3 hover:bg-[#4a8d70] transition-all active:scale-[0.98] mt-4">Complete Registration <ArrowRight size={18} className="md:w-5 md:h-5" /></button>
                   </form>
                 </div>
               )}
 
               {regStep === 'SUCCESS' && lastRegisteredPet && (
                 <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-                  <div className="text-center mb-10">
-                    <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-xl">
-                      <CheckCircle2 size={40} />
+                  <div className="text-center mb-6 md:mb-10">
+                    <div className="w-16 md:w-20 h-16 md:h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-xl">
+                      <CheckCircle2 size={32} className="md:w-10 md:h-10" />
                     </div>
-                    <h3 className="text-3xl font-black text-slate-900">Registration Complete</h3>
-                    <p className="text-sm font-medium text-slate-500 mt-2">Your household is now active at Dr. Purrfect.</p>
+                    <h3 className="text-2xl md:text-3xl font-black text-slate-900">Registration Complete</h3>
+                    <p className="text-xs md:text-sm font-medium text-slate-500 mt-2">Your household is now active at Dr. Purrfect.</p>
                   </div>
 
-                  <div className="bg-slate-900 rounded-[2rem] p-8 text-white relative overflow-hidden shadow-2xl mb-8">
+                  <div className="bg-slate-900 rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 text-white relative overflow-hidden shadow-2xl mb-6 md:mb-8">
                      <div className="absolute top-0 right-0 p-4 opacity-10"><PawPrint size={100} /></div>
                      <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-6">
+                        <div className="flex justify-between items-start mb-4 md:mb-6">
                            <div>
-                              <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Official Patient ID</p>
-                              <h4 className="text-5xl font-black tracking-tighter">{lastRegisteredPet.display_id}</h4>
+                              <p className="text-[9px] md:text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Official Patient ID</p>
+                              <h4 className="text-4xl md:text-5xl font-black tracking-tighter">{lastRegisteredPet.display_id}</h4>
                            </div>
-                           <button onClick={handleCopyId} className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/10">
-                              {isCopying ? <Check size={20} className="text-emerald-400" /> : <Copy size={20} />}
+                           <button onClick={handleCopyId} className="p-2.5 md:p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all border border-white/10">
+                              {isCopying ? <Check size={18} className="md:w-5 md:h-5 text-emerald-400" /> : <Copy size={18} className="md:w-5 md:h-5" />}
                            </button>
                         </div>
-                        <div className="space-y-4 pt-4 border-t border-white/10">
+                        <div className="space-y-3 md:space-y-4 pt-4 border-t border-white/10">
                            <div className="flex justify-between items-center">
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Companion</span>
-                              <span className="text-lg font-black">{lastRegisteredPet.pet_name}</span>
+                              <span className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Companion</span>
+                              <span className="text-base md:text-lg font-black">{lastRegisteredPet.pet_name}</span>
                            </div>
                            <div className="flex justify-between items-center">
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Species</span>
-                              <span className="text-sm font-bold text-emerald-400">{lastRegisteredPet.pet_type}</span>
+                              <span className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Species</span>
+                              <span className="text-xs md:text-sm font-bold text-emerald-400">{lastRegisteredPet.pet_type}</span>
                            </div>
                         </div>
                      </div>
                   </div>
 
-                  <div className="p-6 bg-amber-50 rounded-2xl border border-amber-100 mb-8">
+                  <div className="p-5 md:p-6 bg-amber-50 rounded-xl md:rounded-2xl border border-amber-100 mb-6 md:mb-8">
                      <div className="flex gap-3">
-                        <Info size={20} className="text-amber-600 shrink-0" />
-                        <p className="text-xs font-bold text-amber-900 leading-relaxed">
+                        <Info size={18} className="md:w-5 md:h-5 text-amber-600 shrink-0" />
+                        <p className="text-[11px] md:text-xs font-bold text-amber-900 leading-relaxed">
                           Save this Patient ID. You can use it along with your pet's name to instantly access their medical records from any device.
                         </p>
                      </div>
@@ -552,9 +552,9 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
 
                   <button 
                     onClick={() => { setIsRegisterModalOpen(false); setRegStep('FORM'); }}
-                    className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 hover:bg-slate-800 transition-all"
+                    className="w-full py-4 md:py-5 bg-slate-900 text-white rounded-xl md:rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 md:gap-3 hover:bg-slate-800 transition-all"
                   >
-                    Go to Patient Portal <ArrowRight size={20} />
+                    Go to Patient Portal <ArrowRight size={18} className="md:w-5 md:h-5" />
                   </button>
                 </div>
               )}
@@ -565,7 +565,7 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
 
       {/* ADD PET MODAL (For existing owners) */}
       {isAddPetModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsAddPetModalOpen(false)} />
           <div className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="p-10">
@@ -601,7 +601,7 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
 
       {/* UPLOAD RECORD MODAL */}
       {isUploadModalOpen && selectedPet && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsUploadModalOpen(false)} />
           <div className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200">
             <div className="p-10">
@@ -657,7 +657,7 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
 
       {/* EDIT PET MODAL */}
       {isEditPetModalOpen && selectedPet && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsEditPetModalOpen(false)} />
           <div className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200">
             <div className="p-10">
