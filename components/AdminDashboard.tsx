@@ -216,7 +216,7 @@ const AdminDashboard: React.FC<Props> = ({ records, onAddRecord, onDeleteRecord,
       {deleteConfirmId && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setDeleteConfirmId(null)} />
-          <div className="relative w-full max-w-sm bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200 p-8 text-center">
+          <div className="relative w-full max-sm bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200 p-8 text-center">
              <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <AlertTriangle size={32} />
              </div>
@@ -242,28 +242,9 @@ const AdminDashboard: React.FC<Props> = ({ records, onAddRecord, onDeleteRecord,
       
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-2">
         <div className="flex flex-col gap-2">
-          {onSwitchRole && (
-            <div className="flex md:hidden gap-2 mb-2">
-              <button 
-                onClick={onSwitchRole}
-                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
-              >
-                <Home size={14} /> Owner Portal
-              </button>
-              {onLogout && (
-                <button 
-                  onClick={onLogout}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
-                >
-                  <Lock size={14} /> Lock Vault
-                </button>
-              )}
-            </div>
-          )}
-          
           <div className="flex items-center gap-4 mb-1">
             <h2 className="text-2xl font-black text-slate-900 tracking-tight">Vet's Workspace</h2>
-            <div className="hidden xs:flex gap-1.5">
+            <div className="flex gap-1.5">
               <button 
                 onClick={() => setIsSecurityOpen(!isSecurityOpen)}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border ${isSecurityOpen ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg' : 'bg-slate-100 border-slate-200 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50'}`}
@@ -273,9 +254,9 @@ const AdminDashboard: React.FC<Props> = ({ records, onAddRecord, onDeleteRecord,
               {onLogout && (
                 <button 
                   onClick={onLogout}
-                  className="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border border-slate-200"
+                  className="flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border border-rose-200 shadow-sm"
                 >
-                  <LogOut size={12} /> Lock
+                  <LogOut size={12} /> Lock Portal
                 </button>
               )}
             </div>

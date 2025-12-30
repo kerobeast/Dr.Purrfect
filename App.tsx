@@ -135,8 +135,19 @@ const VetLogin: React.FC<{ onAuthenticate: () => void; onBack: () => void }> = (
   );
 };
 
-const ProfileModal: React.FC<{ isOpen: boolean; onClose: () => void; role: ViewRole; owner: Owner | null; pets: Pet[] }> = ({ isOpen, onClose, role, owner, pets }) => {
+const ProfileModal: React.FC<{ isOpen: boolean; onClose: () => void; role: ViewRole; owner: Owner | null; pets: Pet[]; isVetAuthenticated: boolean }> = ({ isOpen, onClose, role, owner, pets, isVetAuthenticated }) => {
   if (!isOpen) return null;
+
+  const getProfileName = () => {
+    if (role === 'VET') return isVetAuthenticated ? 'Dr. Jane Doe' : 'Clinician Not Authenticated';
+    return owner?.name || 'Guest Explorer';
+  };
+
+  const getProfileInitials = () => {
+    if (role === 'VET') return isVetAuthenticated ? 'JD' : '?';
+    if (owner) return owner.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    return '?';
+  };
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
@@ -144,15 +155,15 @@ const ProfileModal: React.FC<{ isOpen: boolean; onClose: () => void; role: ViewR
       <div className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-200">
         <div className="p-10">
           <div className="flex justify-between items-start mb-8">
-            <div className="w-20 h-20 rounded-3xl bg-emerald-500 text-white flex items-center justify-center text-3xl font-black shadow-xl shadow-emerald-200">
-              {role === 'VET' ? 'JD' : (owner ? owner.name.split(' ').map(n => n[0]).join('') : '?')}
+            <div className={`w-20 h-20 rounded-3xl flex items-center justify-center text-3xl font-black shadow-xl ${role === 'VET' && isVetAuthenticated ? 'bg-emerald-500 text-white shadow-emerald-200' : 'bg-slate-100 text-slate-400 shadow-slate-100'}`}>
+              {getProfileInitials()}
             </div>
             <button onClick={onClose} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full transition-colors"><X size={24} /></button>
           </div>
 
           <div className="mb-8">
-            <h3 className="text-2xl font-black text-slate-900">{role === 'VET' ? 'Dr. Jane Doe' : (owner?.name || 'Guest User')}</h3>
-            <p className="text-[11px] font-black text-emerald-600 uppercase tracking-widest mt-1">{role === 'VET' ? 'Chief Medical Officer' : 'Premium Pet Guardian'}</p>
+            <h3 className="text-2xl font-black text-slate-900">{getProfileName()}</h3>
+            <p className="text-[11px] font-black text-emerald-600 uppercase tracking-widest mt-1">{role === 'VET' ? 'Clinical Workspace' : 'Personal Health Vault'}</p>
           </div>
 
           <div className="space-y-4">
@@ -160,18 +171,9 @@ const ProfileModal: React.FC<{ isOpen: boolean; onClose: () => void; role: ViewR
               <Mail className="text-slate-400" size={18} />
               <div>
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Email Address</p>
-                <p className="text-xs font-bold text-slate-700">{role === 'VET' ? 'jane.doe@drpurrfect.vet' : (owner?.email || 'N/A')}</p>
+                <p className="text-xs font-bold text-slate-700">{role === 'VET' ? (isVetAuthenticated ? 'jane.doe@drpurrfect.vet' : 'Authentication Required') : (owner?.email || 'No email registered')}</p>
               </div>
             </div>
-            {owner?.phone_number && (
-              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <Phone className="text-slate-400" size={18} />
-                <div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Emergency Contact</p>
-                  <p className="text-xs font-bold text-slate-700">{owner.phone_number}</p>
-                </div>
-              </div>
-            )}
             {role === 'OWNER' && owner && (
               <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100">
                 <div className="flex items-center justify-between mb-3">
@@ -360,7 +362,7 @@ const App: React.FC = () => {
   };
 
   const getInitials = () => {
-    if (role === 'VET') return 'JD';
+    if (role === 'VET') return isVetAuthenticated ? 'JD' : '?';
     if (activeOwner) {
       return activeOwner.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
     }
@@ -368,7 +370,7 @@ const App: React.FC = () => {
   };
 
   const getCurrentName = () => {
-    if (role === 'VET') return 'Dr. Jane Doe';
+    if (role === 'VET') return isVetAuthenticated ? 'Dr. Jane Doe' : 'Locked Workspace';
     if (activeOwner) return activeOwner.name;
     return 'Guest User';
   };
@@ -445,7 +447,7 @@ const App: React.FC = () => {
           <div className="relative" ref={profileRef}>
             <button 
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className={`flex items-center gap-2 w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-gradient-to-br ${isUserLoggedIn ? 'from-emerald-100 to-emerald-200 border-emerald-300 text-emerald-800' : 'from-slate-100 to-slate-200 border-slate-300 text-slate-400'} border items-center justify-center font-bold shadow-sm transition-all hover:scale-105 active:scale-95 ${isProfileOpen ? 'ring-2 ring-emerald-500 ring-offset-2' : ''}`}
+              className={`flex items-center gap-2 w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-gradient-to-br ${isUserLoggedIn ? 'from-emerald-100 to-emerald-200 border-emerald-300 text-emerald-800 shadow-emerald-200' : 'from-slate-100 to-slate-200 border-slate-300 text-slate-400'} border items-center justify-center font-bold shadow-sm transition-all hover:scale-105 active:scale-95 ${isProfileOpen ? 'ring-2 ring-emerald-500 ring-offset-2' : ''}`}
             >
               {getInitials()}
             </button>
@@ -524,6 +526,7 @@ const App: React.FC = () => {
           role={role} 
           owner={activeOwner}
           pets={pets}
+          isVetAuthenticated={isVetAuthenticated}
         />
       )}
 

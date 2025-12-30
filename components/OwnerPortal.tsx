@@ -465,8 +465,8 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="flex justify-between items-center mb-8">
                     <div>
-                      <h3 className="text-3xl font-black text-slate-900 tracking-tight">Join the Practice</h3>
-                      <p className="text-[11px] font-black text-emerald-600 uppercase tracking-widest mt-1">Start your medical profile</p>
+                      <h3 className="text-3xl font-black text-slate-900 tracking-tight">Register your Pet</h3>
+                      <p className="text-[11px] font-black text-emerald-600 uppercase tracking-widest mt-1">Start your pet's medical profile</p>
                     </div>
                     <button onClick={() => setIsRegisterModalOpen(false)} className="p-2 text-slate-400"><X size={28} /></button>
                   </div>
