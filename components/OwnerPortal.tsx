@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Heart, Calendar, FileText, ChevronRight, ZoomIn, Utensils, Droplet, Activity, UserRound, Thermometer, AlertCircle, CalendarClock, Phone, Scale, Dog, PawPrint, ClipboardList, ChevronDown, ChevronUp, Info, ArrowRight, Hash, ShieldCheck, Sparkles, Globe, Fingerprint, Stethoscope, Plus, X, Upload, CheckCircle2, ReceiptText, Cat, Bird, Rabbit, Image as ImageIcon, Camera, UserPlus, Sparkle, Edit3, Shield, Mail, Copy, Check } from 'lucide-react';
 import { Owner, Pet, Visit, PetType, Gender } from '../types';
 import ImageLightbox from './ImageLightbox';
+import { savePetRegistration } from '../services/petRegistrations';
 
 interface Props {
   owners: Owner[];
@@ -133,9 +134,13 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
   const [regStep, setRegStep] = useState<'FORM' | 'SUCCESS'>('FORM');
   const [lastRegisteredPet, setLastRegisteredPet] = useState<Pet | null>(null);
   const [isCopying, setIsCopying] = useState(false);
+  const [isSavingRegistration, setIsSavingRegistration] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
 
   const [regFormData, setRegFormData] = useState({
     ownerName: '',
+    ownerEmail: '',
+    ownerPhone: '',
     petName: '',
     petType: PetType.DOG,
     petAge: '',
@@ -200,39 +205,81 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
     }
   };
 
-  const handleFinalRegistration = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // 1. Create Owner
-    const ownerId = `o${Date.now()}`;
-    const owner: Owner = { 
-      id: ownerId, 
-      name: regFormData.ownerName, 
-      email: '', 
-      phone_number: '' 
-    };
-    onAddOwner(owner);
+  const openRegisterModal = () => {
+    setRegStep('FORM');
+    setRegistrationError(null);
+    setRegFormData(prev => ({
+      ...prev,
+      ownerPhone: prev.ownerPhone || phoneNumber
+    }));
+    setIsRegisterModalOpen(true);
+  };
 
-    // 2. Create Pet
-    const petId = `p${Date.now()}`;
-    const displayId = (pets.length + 1001).toString();
-    const pet: Pet = {
-      id: petId,
-      display_id: displayId,
-      owner_id: ownerId,
-      pet_name: regFormData.petName,
-      pet_type: regFormData.petType,
-      age: regFormData.petAge,
-      breed: regFormData.petBreed || 'Mixed',
-      gender: regFormData.petGender,
-      color: 'Standard',
-      birth_date: new Date().toISOString().split('T')[0]
-    };
-    onAddPet(pet);
-    setLastRegisteredPet(pet);
-    
-    // 3. Move to Success Screen
-    setRegStep('SUCCESS');
+  const handleFinalRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegistrationError(null);
+
+    const ownerName = regFormData.ownerName.trim();
+    const ownerEmail = regFormData.ownerEmail.trim();
+    const ownerPhone = regFormData.ownerPhone.trim();
+    const petName = regFormData.petName.trim();
+    const petAge = regFormData.petAge.trim();
+    const petBreed = regFormData.petBreed.trim();
+
+    if (!ownerName || !ownerPhone || !petName || !petAge) {
+      setRegistrationError('Please complete guardian name, phone, pet name, and pet age.');
+      return;
+    }
+    setIsSavingRegistration(true);
+
+    try {
+      const ownerId = `o${Date.now()}`;
+      const petId = `p${Date.now()}`;
+      const displayId = `DP-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+
+      await savePetRegistration({
+        patient_display_id: displayId,
+        owner_name: ownerName,
+        owner_email: ownerEmail || null,
+        owner_phone: ownerPhone,
+        pet_name: petName,
+        pet_type: regFormData.petType,
+        pet_age: petAge,
+        pet_breed: petBreed || null,
+        pet_gender: regFormData.petGender,
+        source: 'website_registration_form',
+        page_url: window.location.href,
+        user_agent: window.navigator.userAgent,
+      });
+
+      const owner: Owner = {
+        id: ownerId,
+        name: ownerName,
+        email: ownerEmail,
+        phone_number: ownerPhone
+      };
+      onAddOwner(owner);
+
+      const pet: Pet = {
+        id: petId,
+        display_id: displayId,
+        owner_id: ownerId,
+        pet_name: petName,
+        pet_type: regFormData.petType,
+        age: petAge,
+        breed: petBreed || 'Mixed',
+        gender: regFormData.petGender,
+        color: 'Standard',
+        birth_date: new Date().toISOString().split('T')[0]
+      };
+      onAddPet(pet);
+      setLastRegisteredPet(pet);
+      setRegStep('SUCCESS');
+    } catch (error) {
+      setRegistrationError(error instanceof Error ? error.message : 'Unable to save registration. Please try again.');
+    } finally {
+      setIsSavingRegistration(false);
+    }
   };
 
   const handleSaveAnotherPet = (e: React.FormEvent) => {
@@ -335,7 +382,7 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
                 </div>
                 <p className="text-lg font-medium leading-relaxed opacity-95 mb-10">First time visiting? Create your digital household vault and register your pet's medical profile instantly.</p>
               </div>
-              <button onClick={() => { setRegStep('FORM'); setIsRegisterModalOpen(true); }} className="w-full bg-white text-[#56A483] py-6 rounded-3xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-white/90 transition-all shadow-xl shadow-black/10">Register Today <ArrowRight size={22} /></button>
+              <button onClick={openRegisterModal} className="w-full bg-white text-[#56A483] py-6 rounded-3xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-white/90 transition-all shadow-xl shadow-black/10">Register Today <ArrowRight size={22} /></button>
             </div>
 
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200/50 shadow-2xl flex flex-col h-full">
@@ -345,7 +392,7 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
                   <div><h3 className="text-2xl font-black text-slate-900">Phone Access</h3><p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-1">Returning Clients</p></div>
                 </div>
                 <input type="tel" placeholder="555-0101" className="w-full text-xl font-bold p-5 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-emerald-500 outline-none mb-4" value={phoneNumber} onChange={e => { setPhoneNumber(e.target.value); setShowRegisterPrompt(false); }} />
-                {showRegisterPrompt && <button onClick={() => { setRegStep('FORM'); setIsRegisterModalOpen(true); }} className="text-[10px] font-black text-emerald-600 uppercase hover:underline">Profile not found. Register now?</button>}
+                {showRegisterPrompt && <button onClick={openRegisterModal} className="text-[10px] font-black text-emerald-600 uppercase hover:underline">Profile not found. Register now?</button>}
               </div>
               <button onClick={handlePhoneSearch} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest mt-4 hover:bg-slate-800 transition-colors">Access History</button>
             </div>
@@ -360,7 +407,7 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
                   </div>
                 </div>
                 <div className="space-y-4 mb-8">
-                  <input type="text" placeholder="Patient ID (e.g. 1001)" className={`w-full text-xl font-bold p-5 bg-slate-50 border-2 rounded-2xl outline-none transition-all ${searchError ? 'border-rose-400' : 'border-slate-50 focus:border-[#6366f1]'}`} value={petSearchId} onChange={e => setPetSearchId(e.target.value)} />
+                  <input type="text" placeholder="Patient ID (e.g. DP-ABC123)" className={`w-full text-xl font-bold p-5 bg-slate-50 border-2 rounded-2xl outline-none transition-all ${searchError ? 'border-rose-400' : 'border-slate-50 focus:border-[#6366f1]'}`} value={petSearchId} onChange={e => setPetSearchId(e.target.value)} />
                   <input type="text" placeholder="Pet Name" className={`w-full text-xl font-bold p-5 bg-slate-50 border-2 rounded-2xl outline-none transition-all ${searchError ? 'border-rose-400' : 'border-slate-50 focus:border-[#6366f1]'}`} value={petSearchName} onChange={e => setPetSearchName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handlePetIdSearch()} />
                   {searchError && <p className="text-rose-500 text-[10px] font-black uppercase tracking-widest text-center">Patient Record Not Found</p>}
                 </div>
@@ -478,6 +525,16 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
                       </div>
                       <div className="grid grid-cols-2 gap-3 md:gap-4">
                         <div className="group">
+                          <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Guardian Phone</label>
+                          <input type="tel" required placeholder="555-0101" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.ownerPhone} onChange={e => setRegFormData({...regFormData, ownerPhone: e.target.value})} />
+                        </div>
+                        <div className="group">
+                          <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Email</label>
+                          <input type="email" placeholder="optional" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.ownerEmail} onChange={e => setRegFormData({...regFormData, ownerEmail: e.target.value})} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 md:gap-4">
+                        <div className="group">
                           <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Pet Name</label>
                           <input type="text" required placeholder="e.g. Luna" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.petName} onChange={e => setRegFormData({...regFormData, petName: e.target.value})} />
                         </div>
@@ -485,6 +542,10 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
                           <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Pet Age</label>
                           <input type="text" required placeholder="e.g. 2 Years" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.petAge} onChange={e => setRegFormData({...regFormData, petAge: e.target.value})} />
                         </div>
+                      </div>
+                      <div className="group">
+                        <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Breed</label>
+                        <input type="text" placeholder="Mixed, Siamese, French Bulldog..." className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.petBreed} onChange={e => setRegFormData({...regFormData, petBreed: e.target.value})} />
                       </div>
                       <div className="grid grid-cols-2 gap-3 md:gap-4">
                         <div className="group">
@@ -501,7 +562,14 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
                         </div>
                       </div>
                     </div>
-                    <button type="submit" className="w-full py-4 md:py-5 bg-[#56A483] text-white rounded-xl md:rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 md:gap-3 hover:bg-[#4a8d70] transition-all active:scale-[0.98] mt-4">Complete Registration <ArrowRight size={18} className="md:w-5 md:h-5" /></button>
+                    {registrationError && (
+                      <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 text-xs font-bold leading-relaxed">
+                        {registrationError}
+                      </div>
+                    )}
+                    <button type="submit" disabled={isSavingRegistration} className="w-full py-4 md:py-5 bg-[#56A483] disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl md:rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 md:gap-3 hover:bg-[#4a8d70] transition-all active:scale-[0.98] mt-4">
+                      {isSavingRegistration ? 'Saving to Supabase...' : 'Complete Registration'} <ArrowRight size={18} className="md:w-5 md:h-5" />
+                    </button>
                   </form>
                 </div>
               )}
