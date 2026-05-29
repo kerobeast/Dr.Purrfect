@@ -4,6 +4,12 @@ import { Heart, Calendar, FileText, ChevronRight, ZoomIn, Utensils, Droplet, Act
 import { Owner, Pet, Visit, PetType, Gender } from '../types';
 import ImageLightbox from './ImageLightbox';
 import { savePetRegistration } from '../services/petRegistrations';
+import {
+  buildPetRegistrationSubmission,
+  createPatientDisplayId,
+  getRegistrationValidationErrors,
+  type RegistrationFormData,
+} from '../services/registrationHelpers';
 
 interface Props {
   owners: Owner[];
@@ -137,15 +143,22 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
   const [isSavingRegistration, setIsSavingRegistration] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
 
-  const [regFormData, setRegFormData] = useState({
+  const [regFormData, setRegFormData] = useState<RegistrationFormData>({
     ownerName: '',
     ownerEmail: '',
     ownerPhone: '',
+    preferredContactMethod: 'text',
+    bestTimeToContact: '',
     petName: '',
     petType: PetType.DOG,
     petAge: '',
     petBreed: '',
-    petGender: Gender.FEMALE
+    petGender: Gender.FEMALE,
+    visitReason: '',
+    careNeeds: '',
+    urgency: 'routine',
+    consentToContact: true,
+    marketingConsent: false,
   });
 
   const [newPetData, setNewPetData] = useState<Partial<Pet>>({
@@ -219,38 +232,32 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
     e.preventDefault();
     setRegistrationError(null);
 
-    const ownerName = regFormData.ownerName.trim();
-    const ownerEmail = regFormData.ownerEmail.trim();
-    const ownerPhone = regFormData.ownerPhone.trim();
-    const petName = regFormData.petName.trim();
-    const petAge = regFormData.petAge.trim();
-    const petBreed = regFormData.petBreed.trim();
-
-    if (!ownerName || !ownerPhone || !petName || !petAge) {
-      setRegistrationError('Please complete guardian name, phone, pet name, and pet age.');
+    const validationErrors = getRegistrationValidationErrors(regFormData);
+    if (validationErrors.length > 0) {
+      setRegistrationError(validationErrors.join(' '));
       return;
     }
+
     setIsSavingRegistration(true);
 
     try {
+      const ownerName = regFormData.ownerName.trim();
+      const ownerEmail = regFormData.ownerEmail.trim();
+      const ownerPhone = regFormData.ownerPhone.trim();
+      const petName = regFormData.petName.trim();
+      const petAge = regFormData.petAge.trim();
+      const petBreed = regFormData.petBreed.trim();
       const ownerId = `o${Date.now()}`;
       const petId = `p${Date.now()}`;
-      const displayId = `DP-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+      const displayId = createPatientDisplayId();
 
-      await savePetRegistration({
-        patient_display_id: displayId,
-        owner_name: ownerName,
-        owner_email: ownerEmail || null,
-        owner_phone: ownerPhone,
-        pet_name: petName,
-        pet_type: regFormData.petType,
-        pet_age: petAge,
-        pet_breed: petBreed || null,
-        pet_gender: regFormData.petGender,
-        source: 'website_registration_form',
-        page_url: window.location.href,
-        user_agent: window.navigator.userAgent,
-      });
+      await savePetRegistration(
+        buildPetRegistrationSubmission(regFormData, {
+          displayId,
+          pageUrl: window.location.href,
+          userAgent: window.navigator.userAgent,
+        }),
+      );
 
       const owner: Owner = {
         id: ownerId,
@@ -273,6 +280,8 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
         birth_date: new Date().toISOString().split('T')[0]
       };
       onAddPet(pet);
+      setActiveOwner(owner);
+      setSelectedPet(pet);
       setLastRegisteredPet(pet);
       setRegStep('SUCCESS');
     } catch (error) {
@@ -380,7 +389,7 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
                     <p className="text-[11px] font-black uppercase tracking-widest mt-2 opacity-80">Join the Practice</p>
                   </div>
                 </div>
-                <p className="text-lg font-medium leading-relaxed opacity-95 mb-10">First time visiting? Create your digital household vault and register your pet's medical profile instantly.</p>
+                <p className="text-lg font-medium leading-relaxed opacity-95 mb-10">Register for today’s Dr. Purrfect list, share the essentials, and receive a patient ID for your pet’s medical profile.</p>
               </div>
               <button onClick={openRegisterModal} className="w-full bg-white text-[#56A483] py-6 rounded-3xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-white/90 transition-all shadow-xl shadow-black/10">Register Today <ArrowRight size={22} /></button>
             </div>
@@ -407,7 +416,7 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
                   </div>
                 </div>
                 <div className="space-y-4 mb-8">
-                  <input type="text" placeholder="Patient ID (e.g. DP-ABC123)" className={`w-full text-xl font-bold p-5 bg-slate-50 border-2 rounded-2xl outline-none transition-all ${searchError ? 'border-rose-400' : 'border-slate-50 focus:border-[#6366f1]'}`} value={petSearchId} onChange={e => setPetSearchId(e.target.value)} />
+                  <input type="text" placeholder="Patient ID (e.g. DP-12345)" className={`w-full text-xl font-bold p-5 bg-slate-50 border-2 rounded-2xl outline-none transition-all ${searchError ? 'border-rose-400' : 'border-slate-50 focus:border-[#6366f1]'}`} value={petSearchId} onChange={e => setPetSearchId(e.target.value)} />
                   <input type="text" placeholder="Pet Name" className={`w-full text-xl font-bold p-5 bg-slate-50 border-2 rounded-2xl outline-none transition-all ${searchError ? 'border-rose-400' : 'border-slate-50 focus:border-[#6366f1]'}`} value={petSearchName} onChange={e => setPetSearchName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handlePetIdSearch()} />
                   {searchError && <p className="text-rose-500 text-[10px] font-black uppercase tracking-widest text-center">Patient Record Not Found</p>}
                 </div>
@@ -512,63 +521,117 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="flex justify-between items-start mb-6 md:mb-8 sticky top-0 bg-white z-10 pb-2">
                     <div>
-                      <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Register your Pet</h3>
-                      <p className="text-[10px] md:text-[11px] font-black text-emerald-600 uppercase tracking-widest mt-1">Start your pet's medical profile</p>
+                      <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Register for Today</h3>
+                      <p className="text-[10px] md:text-[11px] font-black text-emerald-600 uppercase tracking-widest mt-1">New patient intake + callback list</p>
                     </div>
                     <button onClick={() => setIsRegisterModalOpen(false)} className="p-2 text-slate-400 hover:text-rose-500 transition-colors"><X size={24} className="md:w-7 md:h-7" /></button>
                   </div>
-                  <form onSubmit={handleFinalRegistration} className="space-y-4 md:space-y-6">
+                  <form onSubmit={handleFinalRegistration} className="space-y-4 md:space-y-5">
+                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 text-xs font-bold leading-relaxed text-emerald-900">
+                      Register for today’s visit in under a minute. We’ll save the intake to Dr. Purrfect’s patient list and follow up using your preferred contact method.
+                    </div>
+
                     <div className="space-y-4">
                       <div className="group">
                         <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Guardian Name</label>
-                        <input type="text" required placeholder="Full name" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.ownerName} onChange={e => setRegFormData({...regFormData, ownerName: e.target.value})} />
+                        <input type="text" required autoComplete="name" placeholder="Full name" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.ownerName} onChange={e => setRegFormData({...regFormData, ownerName: e.target.value})} />
                       </div>
-                      <div className="grid grid-cols-2 gap-3 md:gap-4">
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                         <div className="group">
                           <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Guardian Phone</label>
-                          <input type="tel" required placeholder="555-0101" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.ownerPhone} onChange={e => setRegFormData({...regFormData, ownerPhone: e.target.value})} />
+                          <input type="tel" autoComplete="tel" placeholder="(555) 010-1234" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.ownerPhone} onChange={e => setRegFormData({...regFormData, ownerPhone: e.target.value})} />
                         </div>
                         <div className="group">
                           <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Email</label>
-                          <input type="email" placeholder="optional" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.ownerEmail} onChange={e => setRegFormData({...regFormData, ownerEmail: e.target.value})} />
+                          <input type="email" autoComplete="email" placeholder="you@example.com" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.ownerEmail} onChange={e => setRegFormData({...regFormData, ownerEmail: e.target.value})} />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 md:gap-4">
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                        <div className="group">
+                          <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Preferred Follow-Up</label>
+                          <select className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all appearance-none" value={regFormData.preferredContactMethod} onChange={e => setRegFormData({...regFormData, preferredContactMethod: e.target.value as RegistrationFormData['preferredContactMethod']})}>
+                            <option value="text">Text me</option>
+                            <option value="phone">Call me</option>
+                            <option value="email">Email me</option>
+                          </select>
+                        </div>
+                        <div className="group">
+                          <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Best Time</label>
+                          <input type="text" placeholder="Morning, afternoon, after 5..." className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.bestTimeToContact} onChange={e => setRegFormData({...regFormData, bestTimeToContact: e.target.value})} />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                         <div className="group">
                           <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Pet Name</label>
                           <input type="text" required placeholder="e.g. Luna" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.petName} onChange={e => setRegFormData({...regFormData, petName: e.target.value})} />
                         </div>
                         <div className="group">
                           <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Pet Age</label>
-                          <input type="text" required placeholder="e.g. 2 Years" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.petAge} onChange={e => setRegFormData({...regFormData, petAge: e.target.value})} />
+                          <input type="text" required placeholder="e.g. 2 years" className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.petAge} onChange={e => setRegFormData({...regFormData, petAge: e.target.value})} />
                         </div>
                       </div>
-                      <div className="group">
-                        <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Breed</label>
-                        <input type="text" placeholder="Mixed, Siamese, French Bulldog..." className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.petBreed} onChange={e => setRegFormData({...regFormData, petBreed: e.target.value})} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 md:gap-4">
-                        <div className="group">
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+                        <div className="group sm:col-span-1">
                           <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Pet Type</label>
                           <select required className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all appearance-none" value={regFormData.petType} onChange={e => setRegFormData({...regFormData, petType: e.target.value as PetType})}>
                             {Object.values(PetType).map(t => <option key={t} value={t}>{t}</option>)}
                           </select>
                         </div>
-                        <div className="group">
+                        <div className="group sm:col-span-1">
                           <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Gender</label>
                           <select required className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all appearance-none" value={regFormData.petGender} onChange={e => setRegFormData({...regFormData, petGender: e.target.value as Gender})}>
                             {Object.values(Gender).map(g => <option key={g} value={g}>{g}</option>)}
                           </select>
                         </div>
+                        <div className="group sm:col-span-1">
+                          <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Breed</label>
+                          <input type="text" placeholder="Mixed, Siamese..." className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.petBreed} onChange={e => setRegFormData({...regFormData, petBreed: e.target.value})} />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                        <div className="group">
+                          <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Visit Reason</label>
+                          <input type="text" placeholder="Checkup, vaccine, grooming concern..." className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all" value={regFormData.visitReason} onChange={e => setRegFormData({...regFormData, visitReason: e.target.value})} />
+                        </div>
+                        <div className="group">
+                          <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Timing</label>
+                          <select className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all appearance-none" value={regFormData.urgency} onChange={e => setRegFormData({...regFormData, urgency: e.target.value as RegistrationFormData['urgency']})}>
+                            <option value="routine">Routine / no rush</option>
+                            <option value="soon">Would like a visit soon</option>
+                            <option value="urgent">Needs attention today</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="group">
+                        <label className="block text-[9px] md:text-[10px] font-black text-slate-500 uppercase mb-1.5 md:mb-2 ml-1">Anything We Should Know?</label>
+                        <textarea rows={3} placeholder="Allergies, medications, temperament, symptoms, or special handling notes..." className="w-full p-3.5 md:p-4 bg-slate-50 border rounded-xl md:rounded-2xl font-bold focus:border-emerald-500 outline-none transition-all resize-none" value={regFormData.careNeeds} onChange={e => setRegFormData({...regFormData, careNeeds: e.target.value})} />
                       </div>
                     </div>
+
+                    <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                      <label className="flex gap-3 text-xs font-bold leading-relaxed text-slate-700">
+                        <input type="checkbox" className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600" checked={regFormData.consentToContact} onChange={e => setRegFormData({...regFormData, consentToContact: e.target.checked})} />
+                        I authorize Dr. Purrfect to contact me about this registration and care request.
+                      </label>
+                      <label className="flex gap-3 text-xs font-bold leading-relaxed text-slate-500">
+                        <input type="checkbox" className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600" checked={regFormData.marketingConsent} onChange={e => setRegFormData({...regFormData, marketingConsent: e.target.checked})} />
+                        Send occasional pet-care reminders and practice updates.
+                      </label>
+                    </div>
+
                     {registrationError && (
                       <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 text-xs font-bold leading-relaxed">
                         {registrationError}
                       </div>
                     )}
                     <button type="submit" disabled={isSavingRegistration} className="w-full py-4 md:py-5 bg-[#56A483] disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl md:rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 md:gap-3 hover:bg-[#4a8d70] transition-all active:scale-[0.98] mt-4">
-                      {isSavingRegistration ? 'Saving to Supabase...' : 'Complete Registration'} <ArrowRight size={18} className="md:w-5 md:h-5" />
+                      {isSavingRegistration ? 'Saving Registration...' : 'Register for Today'} <ArrowRight size={18} className="md:w-5 md:h-5" />
                     </button>
                   </form>
                 </div>
@@ -580,8 +643,8 @@ const OwnerPortal: React.FC<Props> = ({ owners, pets, visits, onAddOwnerRecord, 
                     <div className="w-16 md:w-20 h-16 md:h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-xl">
                       <CheckCircle2 size={32} className="md:w-10 md:h-10" />
                     </div>
-                    <h3 className="text-2xl md:text-3xl font-black text-slate-900">Registration Complete</h3>
-                    <p className="text-xs md:text-sm font-medium text-slate-500 mt-2">Your household is now active at Dr. Purrfect.</p>
+                    <h3 className="text-2xl md:text-3xl font-black text-slate-900">Registration Saved</h3>
+                    <p className="text-xs md:text-sm font-medium text-slate-500 mt-2">You’re on Dr. Purrfect’s intake list. Save this ID for the visit.</p>
                   </div>
 
                   <div className="bg-slate-900 rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-8 text-white relative overflow-hidden shadow-2xl mb-6 md:mb-8">
