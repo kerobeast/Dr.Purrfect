@@ -35,7 +35,7 @@ create table if not exists public.pet_registrations (
   constraint pet_registrations_urgency_check check (urgency in ('routine', 'soon', 'urgent')),
   constraint pet_registrations_contact_required_check check (
     nullif(trim(coalesce(owner_email, '')), '') is not null
-    or nullif(regexp_replace(coalesce(owner_phone, ''), '\D', '', 'g'), '') is not null
+    or nullif(regexp_replace(coalesce(owner_phone, ''), '[^0-9]', '', 'g'), '') is not null
   )
 );
 
@@ -55,9 +55,12 @@ alter table public.pet_registrations
 
 update public.pet_registrations
 set owner_email_normalized = nullif(lower(trim(owner_email)), ''),
-    owner_phone_normalized = nullif(regexp_replace(coalesce(owner_phone, ''), '\D', '', 'g'), ''),
+    owner_phone_normalized = nullif(regexp_replace(coalesce(owner_phone, ''), '[^0-9]', '', 'g'), ''),
     updated_at = coalesce(updated_at, created_at, now())
 where owner_email_normalized is null or owner_phone_normalized is null;
+
+alter table public.pet_registrations
+  drop constraint if exists pet_registrations_contact_required_check;
 
 do $$
 begin
@@ -96,7 +99,7 @@ begin
       add constraint pet_registrations_contact_required_check
       check (
         nullif(trim(coalesce(owner_email, '')), '') is not null
-        or nullif(regexp_replace(coalesce(owner_phone, ''), '\D', '', 'g'), '') is not null
+        or nullif(regexp_replace(coalesce(owner_phone, ''), '[^0-9]', '', 'g'), '') is not null
       );
   end if;
 end $$;
@@ -133,13 +136,13 @@ with check (
   and patient_display_id ~ '^DP-[0-9]{5}$'
   and preferred_contact_method in ('phone', 'text', 'email')
   and urgency in ('routine', 'soon', 'urgent')
-  and (owner_email is null or owner_email ~* '^[^\s@]+@[^\s@]+\.[^\s@]+$')
-  and (owner_phone is null or length(regexp_replace(owner_phone, '\D', '', 'g')) >= 10)
+  and (owner_email is null or owner_email ~* '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$')
+  and (owner_phone is null or length(regexp_replace(owner_phone, '[^0-9]', '', 'g')) >= 10)
   and (preferred_contact_method <> 'email' or owner_email is not null)
   and (preferred_contact_method = 'email' or owner_phone is not null)
   and (
     nullif(trim(coalesce(owner_email, '')), '') is not null
-    or nullif(regexp_replace(coalesce(owner_phone, ''), '\D', '', 'g'), '') is not null
+    or nullif(regexp_replace(coalesce(owner_phone, ''), '[^0-9]', '', 'g'), '') is not null
   )
 );
 
